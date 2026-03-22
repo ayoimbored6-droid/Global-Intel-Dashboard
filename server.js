@@ -228,7 +228,7 @@ function calculateRelevance(article) {
 
 app.get('/api/news', async (req, res) => {
     try {
-        const { q, days } = req.query;
+        const { q, days, date } = req.query;
         let query = {};
         
         if (q) {
@@ -238,7 +238,11 @@ app.get('/api/news', async (req, res) => {
             ];
         }
         
-        if (days) {
+        if (date) {
+            const startOfDay = new Date(date).setHours(0,0,0,0);
+            const endOfDay = new Date(date).setHours(23,59,59,999);
+            query.publishedAt = { $gte: startOfDay, $lte: endOfDay };
+        } else if (days) {
             const timeLimit = Date.now() - (parseInt(days) * 24 * 60 * 60 * 1000);
             query.publishedAt = { $gte: timeLimit };
         }
