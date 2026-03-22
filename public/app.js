@@ -50,8 +50,8 @@ async function fetchNews() {
         const queryParams = new URLSearchParams();
         if (searchQuery) queryParams.append('q', searchQuery);
         
-        const timeSelect = document.getElementById('time-select');
-        if (timeSelect) queryParams.append('days', timeSelect.value);
+        const datePicker = document.getElementById('date-picker');
+        if (datePicker && datePicker.value) queryParams.append('date', datePicker.value);
 
         const res = await fetch(`/api/news?${queryParams.toString()}`);
         if (!res.ok) throw new Error("Server disconnected");
@@ -106,30 +106,29 @@ function setupUI() {
              searchInput.style.borderColor = 'var(--border-color, #444)';
              searchInput.style.boxShadow = 'none';
         };
-        let debounceTimer;
-        searchInput.addEventListener('input', (e) => {
-            searchQuery = e.target.value.trim();
-            clearTimeout(debounceTimer);
-            debounceTimer = setTimeout(() => {
+        searchInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                searchQuery = e.target.value.trim();
                 showLoader(true);
                 fetchNews().then(() => {
-                    if (articles.length > 0) {
-                        applyFilters();
-                    } else {
-                        renderCards();
-                        showLoader(false);
-                    }
+                    if (articles.length > 0) applyFilters();
+                    else { renderCards(); showLoader(false); }
                 });
-            }, 600);
+            }
+        });
+        searchInput.addEventListener('input', (e) => {
+            searchQuery = e.target.value.trim();
+            applyFilters();
         });
         refreshBtn.parentNode.insertBefore(searchInput, refreshBtn);
     }
 
-    // Bind Time Select
-    const timeSelect = document.getElementById('time-select');
-    if (timeSelect && !timeSelect.dataset.bound) {
-        timeSelect.dataset.bound = true;
-        timeSelect.addEventListener('change', () => {
+    // Bind Date Picker
+    const datePicker = document.getElementById('date-picker');
+    if (datePicker && !datePicker.dataset.bound) {
+        datePicker.dataset.bound = true;
+        datePicker.addEventListener('change', () => {
             showLoader(true);
             fetchNews().then(() => {
                 if (articles.length > 0) applyFilters();
@@ -633,21 +632,19 @@ async function generateSitrep() {
             return;
         }
 
-        let html = '<ul style="list-style:none; padding:0; margin:0;">';
+        let html = '<div style="font-family: \'Courier New\', Courier, monospace; letter-spacing: 0px;">';
         sitrepArticles.forEach((a, i) => {
             html += `
-            <li style="margin-bottom: 24px; padding-bottom: 24px; border-bottom: 1px solid rgba(255,255,255,0.05);">
-                <div style="display:flex; align-items:flex-start; gap: 16px;">
-                    <div style="font-size: 1.5rem; font-weight: 900; color: var(--accent-alert); opacity: 0.8;">#${i+1}</div>
-                    <div>
-                        <div style="font-size: 0.75rem; color: var(--accent-primary); font-weight: 700; margin-bottom: 4px; text-transform: uppercase;">SCORE: ${Math.round(a.relevanceScore)} // ${a.source} // ${new Date(a.publishedAt).toLocaleDateString()}</div>
-                        <h4 style="color: #fff; margin-bottom: 8px; font-size: 1.1rem; line-height: 1.4;">${a.title}</h4>
-                        <p style="font-size: 0.9rem; line-height: 1.6;">${a.summary}</p>
-                    </div>
+            <div style="margin-bottom: 24px; padding-bottom: 24px; border-bottom: 1px dashed rgba(255,255,255,0.15);">
+                <div style="font-size: 0.8rem; color: var(--accent-alert); font-weight: bold; margin-bottom: 8px;">
+                    [ENTRY 0${(i+1).toString().slice(-2)}] // CLASSIFICATION: CONFIDENTIAL // SOURCE: ${a.source.toUpperCase()} // DATE: ${new Date(a.publishedAt).toISOString().split('T')[0]}
                 </div>
-            </li>`;
+                <h4 style="color: #fff; margin-bottom: 12px; font-size: 1.1rem; line-height: 1.4; text-transform: uppercase;">SUBJECT: ${a.title}</h4>
+                <p style="font-size: 0.95rem; line-height: 1.6; color: rgba(255,255,255,0.85);">${a.summary}</p>
+                <div style="font-size: 0.75rem; color: var(--accent-primary); margin-top: 12px;">> INTEL RELEVANCE SCORE: DEC-${Math.round(a.relevanceScore)}</div>
+            </div>`;
         });
-        html += '</ul>';
+        html += '</div>';
         content.innerHTML = html;
         
     } catch(err) {
