@@ -33,7 +33,8 @@ const ArticleSchema = new mongoose.Schema({
     link: { type: String, unique: true },
     publishedAt: Number,
     source: String,
-    category: String
+    category: String,
+    createdAt: { type: Date, default: Date.now, expires: 2592000 }
 });
 const Article = mongoose.model('Article', ArticleSchema);
 
@@ -126,7 +127,8 @@ async function pollNews() {
                     link: item.link,
                     publishedAt: item.pubDate ? new Date(item.pubDate).getTime() : Date.now(),
                     source: feed.name,
-                    category: feed.category
+                    category: feed.category,
+                    createdAt: new Date()
                 };
 
                 await Article.updateOne(
