@@ -1,47 +1,39 @@
-# Global Intel | News Dashboard Setup Guide
+🌍 Global Intel Dashboard
+Automated Geopolitical & Technical Intelligence Synthesis
+Live Demo: https://global-intel-dashboard.onrender.com/
 
-This document outlines the steps to run and customize your premium news dashboard.
+📌 Project Overview
+The Global Intel Dashboard is a full-stack intelligence terminal designed to solve the problem of information overload. It aggregates over 65+ high-signal global news streams, processes them through a custom 8-layer prioritization algorithm, and maintains a rolling 30-day historical archive for deep analysis.
 
-## 1. Quick Start
+This project represents my first major leap into full-stack engineering, moving from simple local scripts to a production-grade cloud infrastructure.
 
-This application is built with pure HTML, CSS, and Vanilla JavaScript to ensure high performance and zero build-step overhead.
+🚀 Key Features
+8-Layer Intelligence Scoring: A custom algorithm that ranks incoming data based on critical geopolitical and technical intelligence factors.
 
-1. Open the folder containing these files.
-2. Double-click `index.html` to open it in any modern web browser.
-3. The dashboard will automatically fetch the latest geopolitics and tech news and begin background polling every 60 seconds.
+Persistent Cloud Archive: Integrated with MongoDB Atlas using a Time-To-Live (TTL) index to maintain a self-cleaning 30-day intelligence history.
 
-## 2. Architecture & Features
+Deep Archive Search: Server-side regex searching allowing for millisecond retrieval of keywords across thousands of archived documents.
 
-- **Expandable Grid**: Click on any news card to expand it for a deep-dive reading view spanning the entire grid width.
-- **Background Polling**: The JS runs a silent 60-second counter that seamlessly refreshes data in the background without shifting the UI unexpectedly.
-- **Premium Aesthetics**: Engineered with deep dark-mode arrays (`#111827`, `#080c14`), smooth cubic-bezier transitions, and glassmorphism touches.
-- **API Fetching**: By default, it uses high-quality RSS feeds passed through `rss2json` (to bypass frontend CORS restrictions). If the rate limit is hit, it will seamlessly fall back to local mock data so the UI remains pristine.
+Weekly SITREP Generator: A synthesis engine that identifies and summarizes the top 15 highest-scoring intelligence events from the past 7 days.
 
-## 3. How to add custom API Keys (Currents API / NewsAPI)
+Tactical UI: A high-performance, dark-mode dashboard built for efficiency and "at-a-glance" situational awareness.
 
-If you prefer to use a specialized API like Currents API instead of RSS parsed data, update `app.js`:
+🛠️ Tech Stack
+Backend: Node.js, Express.js
 
-1. Locate the `fetchNews()` function in `app.js`.
-2. Replace the `promises` execution block with your API fetch:
+Database: MongoDB Atlas (NoSQL)
 
-```javascript
-// Example replacing RSS fallback with Currents API
-const apiKey = 'YOUR_CURRENTS_API_KEY';
-const url = `https://api.currentsapi.services/v1/latest-news?language=en&category=technology&apiKey=${apiKey}`;
+ORM: Mongoose
 
-fetch(url)
-    .then(res => res.json())
-    .then(data => {
-        const fetchedItems = data.news.map(item => ({
-             title: item.title,
-             summary: item.description,
-             link: item.url,
-             publishedAt: new Date(item.published),
-             source: "Currents API",
-             category: "technology"
-        }));
-        // Merge into articles...
-    });
-```
+Deployment: Render (CI/CD via GitHub)
 
-Enjoy this highly detailed, ultra-fast News Dashboard!
+Frontend: HTML5, CSS3, Vanilla JavaScript
+
+📈 The Engineering Journey (The "Growth" Story)
+This project was a significant technical challenge for me as a 15-year-old developer. The journey involved:
+
+Scaling from RAM to Disk: Transitioning from in-memory arrays to a persistent database required a complete rewrite of the backend architecture and a deep dive into Mongoose schemas.
+
+DevOps & Deployment: Configuring environment variables, managing CORS, and setting up network access for a live cloud environment on Render.
+
+Algorithmic Logic: Developing the scoring layers to ensure that "signal" is always prioritized over "noise."
