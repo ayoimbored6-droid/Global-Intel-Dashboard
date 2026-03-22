@@ -409,28 +409,49 @@ function renderCards() {
                 <div class="card-actions">
                     <span style="font-size: 0.75rem; color: var(--text-muted)">${dateStr}</span>
                     <div style="display: flex; gap: 12px;">
-                        <a href="${article.link}" target="_blank" class="read-more" onclick="event.stopPropagation()">Source Link <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg></a>
-                        <button class="close-btn" onclick="toggleCard(event, '${article.id}')">Close</button>
+                        <a href="${article.link}" target="_blank" class="read-more">Source Link <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg></a>
+                        <button class="close-btn" data-action="close"><i class="fas fa-compress-alt" style="margin-right: 4px;"></i> Minimize</button>
                     </div>
                 </div>
             </div>
         `;
-        card.addEventListener('click', () => {
-            if (!card.classList.contains('expanded')) {
-                document.querySelectorAll('.news-card.expanded').forEach(c => c.classList.remove('expanded'));
-                card.classList.add('expanded');
-                card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }
-        });
         newsGrid.appendChild(card);
     });
 }
 
-window.toggleCard = function(event, id) {
-    event.stopPropagation();
-    const card = document.getElementById(`card-${id}`);
-    if (card) card.classList.remove('expanded');
-};
+// Global Event Delegation for Intelligence Cards
+newsGrid.addEventListener('click', (e) => {
+    // Minimize Action
+    const closeBtn = e.target.closest('.close-btn[data-action="close"]');
+    if (closeBtn) {
+        e.stopPropagation();
+        const card = closeBtn.closest('.news-card');
+        if (card) {
+            card.classList.remove('expanded');
+            card.classList.add('minimized');
+            setTimeout(() => { card.style.display = 'none'; }, 400); 
+        }
+        return;
+    }
+
+    // Prevent toggle when clicking source hyperlink
+    if (e.target.closest('.read-more')) {
+        e.stopPropagation();
+        return;
+    }
+
+    // Expand Card
+    const card = e.target.closest('.news-card');
+    if (card && !card.classList.contains('minimized')) {
+        if (!card.classList.contains('expanded')) {
+            document.querySelectorAll('.news-card.expanded').forEach(c => c.classList.remove('expanded'));
+            card.classList.add('expanded');
+            setTimeout(() => {
+                card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 100);
+        }
+    }
+});
 
 let countdown = 60;
 function startPolling() {
