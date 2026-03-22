@@ -410,7 +410,9 @@ function renderCards() {
                     <span style="font-size: 0.75rem; color: var(--text-muted)">${dateStr}</span>
                     <div style="display: flex; gap: 12px;">
                         <a href="${article.link}" target="_blank" class="read-more">Source Link <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg></a>
-                        <button class="close-btn" data-action="close"><i class="fas fa-compress-alt" style="margin-right: 4px;"></i> Minimize</button>
+                        <div style="display: flex; gap: 8px;">
+                            <button class="close-btn" data-action="minimize" title="Minimize/Collapse"><i class="fas fa-minus"></i></button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -421,29 +423,37 @@ function renderCards() {
 
 // Global Event Delegation for Intelligence Cards
 newsGrid.addEventListener('click', (e) => {
-    // Minimize Action
-    const closeBtn = e.target.closest('.close-btn[data-action="close"]');
-    if (closeBtn) {
+    // 1. Minimize Action (Collapse visually)
+    const minBtn = e.target.closest('.close-btn[data-action="minimize"]');
+    if (minBtn) {
         e.stopPropagation();
-        const card = closeBtn.closest('.news-card');
+        const card = minBtn.closest('.news-card');
         if (card) {
             card.classList.remove('expanded');
-            card.classList.add('minimized');
-            setTimeout(() => { card.style.display = 'none'; }, 400); 
+            card.classList.toggle('card-collapsed');
+            const icon = minBtn.querySelector('i');
+            if (icon) {
+                icon.className = card.classList.contains('card-collapsed') ? 'fas fa-plus' : 'fas fa-minus';
+            }
         }
         return;
     }
 
-    // Prevent toggle when clicking source hyperlink
+    // 3. Prevent toggle when clicking source hyperlink
     if (e.target.closest('.read-more')) {
         e.stopPropagation();
         return;
     }
 
-    // Expand Card
+    // 4. Expand Card
     const card = e.target.closest('.news-card');
     if (card && !card.classList.contains('minimized')) {
-        if (!card.classList.contains('expanded')) {
+        // If it was collapsed, clicking the body should un-collapse it first
+        if (card.classList.contains('card-collapsed')) {
+            card.classList.remove('card-collapsed');
+            const icon = card.querySelector('.close-btn[data-action="minimize"] i');
+            if (icon) icon.className = 'fas fa-minus';
+        } else if (!card.classList.contains('expanded')) {
             document.querySelectorAll('.news-card.expanded').forEach(c => c.classList.remove('expanded'));
             card.classList.add('expanded');
             setTimeout(() => {
