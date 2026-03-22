@@ -1,7 +1,9 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const Parser = require('rss-parser');
+const mongoose = require('mongoose');
 
 const app = express();
 const parser = new Parser({
@@ -19,8 +21,21 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-let cachedNews = [];
-let newsCacheObj = {};
+// MongoDB Connection
+mongoose.connect(process.env.MONGO_URI)
+  .then(() => console.log('MongoDB Connected'))
+  .catch(err => console.error(err));
+
+// Mongoose Schema & Model
+const ArticleSchema = new mongoose.Schema({
+    title: String,
+    summary: String,
+    link: { type: String, unique: true },
+    publishedAt: Number,
+    source: String,
+    category: String
+});
+const Article = mongoose.model('Article', ArticleSchema);
 
 const FEEDS = [
     // GEOPOLITICS & GLOBAL NEWS
@@ -99,32 +114,26 @@ async function pollNews() {
     const fetchPromises = FEEDS.map(async (feed) => {
         try {
             const parsed = await parser.parseURL(feed.url);
-            let updated = false;
             
-            parsed.items.forEach(item => {
-                if (!item.link) return;
+            for (const item of parsed.items) {
+                if (!item.link) continue;
                 let summary = item.contentSnippet || item.summary || item.content || '';
                 summary = summary.replace(/<[^>]*>?/gm, '').substring(0, 300); // Strip HTML
                 
-                if (!newsCacheObj[item.link]) {
-                    newsCacheObj[item.link] = {
-                        id: Math.random().toString(36).substr(2, 9),
-                        title: item.title,
-                        summary: summary,
-                        link: item.link,
-                        publishedAt: item.pubDate ? new Date(item.pubDate).getTime() : Date.now(),
-                        source: feed.name,
-                        category: feed.category
-                    };
-                    updated = true;
-                }
-            });
+                const articleObj = {
+                    title: item.title,
+                    summary: summary,
+                    link: item.link,
+                    publishedAt: item.pubDate ? new Date(item.pubDate).getTime() : Date.now(),
+                    source: feed.name,
+                    category: feed.category
+                };
 
-            if (updated) {
-                // Reconstruct cachedNews incrementally, capped at 2000 items
-                cachedNews = Object.values(newsCacheObj)
-                    .sort((a, b) => b.publishedAt - a.publishedAt)
-                    .slice(0, 2000);
+                await Article.updateOne(
+                    { link: item.link },
+                    { $set: articleObj },
+                    { upsert: true }
+                );
             }
         } catch (error) {
             console.log(`Skipped ${feed.name}: ${error.message}`);
@@ -133,7 +142,8 @@ async function pollNews() {
 
     try {
         await Promise.allSettled(fetchPromises);
-        console.log(`[${new Date().toISOString()}] Incremental pass complete. Cache size: ${cachedNews.length}`);
+        const count = await Article.countDocuments();
+        console.log(`[${new Date().toISOString()}] Incremental pass complete. DB Cache size: ${count}`);
     } catch(err) {
         console.error('Error during global poll:', err);
     }
@@ -145,8 +155,13 @@ setInterval(pollNews, 600000);
 // Initial poll on startup
 pollNews();
 
-app.get('/api/news', (req, res) => {
-    res.json(cachedNews);
+app.get('/api/news', async (req, res) => {
+    try {
+        const articles = await Article.find().sort({ publishedAt: -1 }).limit(2000);
+        res.json(articles);
+    } catch (err) {
+        res.status(500).json({ error: "Internal DB Error" });
+    }
 });
 
 app.get('/api/sync', async (req, res) => {
