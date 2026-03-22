@@ -431,6 +431,14 @@ body {
     font-size: 1.5rem;
 }
 
+/* Minimized State */
+.news-card.minimized {
+    transform: scale(0.95) translateY(20px);
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
 .card-actions {
     display: flex;
     justify-content: space-between;
