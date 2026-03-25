@@ -396,13 +396,14 @@ function renderCards() {
         const catClass = article.category === 'geopolitics' ? 'tag-geopolitics' : 'tag-technology';
         
         card.innerHTML = `
+            <button class="top-close-btn" data-action="minimize" title="Close"><i class="fas fa-times"></i></button>
             <div class="card-meta">
                 <span class="card-source">${article.source}</span>
                 <span class="cat-tag ${catClass}">${article.category.toUpperCase()}</span>
             </div>
             <div class="card-content">
                 <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin-bottom: 12px;">
-                    <h3 style="margin-bottom: 0;">${article.title}</h3>
+                    <h3 style="margin-bottom: 0; padding-right: 28px;">${article.title}</h3>
                     <span style="font-size: 0.75rem; font-weight: 700; color: var(--accent-primary); white-space: nowrap;">${getTimeAgo(article.publishedAt)}</span>
                 </div>
                 <div class="card-summary">${article.summary || 'Click to view full intelligence brief details...'}</div>
@@ -411,7 +412,7 @@ function renderCards() {
                     <div style="display: flex; gap: 12px;">
                         <a href="${article.link}" target="_blank" class="read-more">Source Link <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg></a>
                         <div style="display: flex; gap: 8px;">
-                            <button class="close-btn" data-action="minimize" title="Minimize"><i class="fas fa-minus"></i></button>
+                            <button class="close-btn" data-action="minimize">Close</button>
                         </div>
                     </div>
                 </div>
@@ -424,7 +425,7 @@ function renderCards() {
 // Global Event Delegation for Intelligence Cards
 newsGrid.addEventListener('click', (e) => {
     // Minimize Action (Revert to default grid sizing)
-    const minBtn = e.target.closest('.close-btn[data-action="minimize"]');
+    const minBtn = e.target.closest('[data-action="minimize"]');
     if (minBtn) {
         e.stopPropagation();
         const card = minBtn.closest('.news-card');
